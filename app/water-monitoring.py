@@ -3,7 +3,7 @@
 A little streamlit frontend to log manual water meter readings to a InfluxDB backend.
 
 Author: GiantMolecularCloud
-Version: 0.1
+Version: 0.2
 """
 
 import os
@@ -211,10 +211,6 @@ for room in ROOMS:
     col1, col2, col3 = st.columns(3)
     with col1:
         st.header(room)
-        st.text("")
-        if st.button(label='Send', key=f"send_{room}"):
-            data = WaterReading(date, time, room, hot, cold)
-            data.write_to_database(client)
     with col2:
         hot = latest_readings[room]['hot']
         st.metric(
@@ -244,3 +240,6 @@ for room in ROOMS:
             key=f'{room}_cold'
         )
     st.text("")
+    if st.button(label='Send', key=f"send_{room}"):
+        data = WaterReading(date, time, room, hot, cold)
+        data.write_to_database(client)
