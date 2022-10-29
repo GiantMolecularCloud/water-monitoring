@@ -7,18 +7,18 @@ To add more roomes, just append to the rooms list (`ROOMS`) in the setup section
 
 ## Local execution
 
-Install streamlit and influxdb:
+Install streamlit and influxdb:  
 `pip install -r docker/requirements.txt`
 
-Run the app in Streamlit:
+Run the app in Streamlit:  
 `streamlit run app/water-monitoring.py`
 
 ## docker
 
-Build the image:
+Build the image:  
 `docker build -t water-monitoring:0.1 -f docker/Dockerfile .`
 
-Run the container:
+Run the container:  
 `docker run -p 8501:8501 water-monitoring:0.1 water-monitoring`
 
 ## Options
@@ -38,6 +38,6 @@ When no variables are given, the following defaults are assumed:
 
 ## Example Dashboard
 
-A very simple dashboard to show the entered values could look like this in Grafana:  
+A very simple dashboard to show the entered values could look like this in Grafana:
 
 ![example dashboard](docs/dashboard.png?raw=true "Example dashboard")
