@@ -36,6 +36,12 @@ When no variables are given, the following defaults are assumed:
 | TIMEZONE      | 'Europe/Berlin'    |
 | DEBUG         | False              |
 
+## Frontend
+
+This is how the Streamlit app looks like when opened in a browser:
+
+![app frontend](docs/frontend.png?raw=true "App frontend")
+
 ## Example Dashboard
 
 A very simple dashboard to show the entered values could look like this in Grafana:
