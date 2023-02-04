@@ -10,8 +10,8 @@ To add more roomes, just append to the rooms list (`ROOMS`) in the setup section
 Install streamlit and influxdb:  
 `pip install -r docker/requirements.txt`
 
-Run the app in Streamlit:  
-`streamlit run app/water-monitoring.py`
+Run the app in Streamlit from within the app directory:
+`streamlit run water-monitoring.py`
 
 ## docker
 

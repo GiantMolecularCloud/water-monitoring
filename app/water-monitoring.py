@@ -24,7 +24,7 @@ from config import RoomsConfig, get_config
 # SETUP
 ####################################################################################################
 
-config = get_config(Path("config/config.yaml"))
+config = get_config(Path("../config/config.yaml"))
 
 logging.basicConfig(level=logging.INFO)
 
