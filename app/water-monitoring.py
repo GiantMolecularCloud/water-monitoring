@@ -3,7 +3,7 @@
 A little streamlit frontend to log manual water meter readings to a InfluxDB backend.
 
 Author: GiantMolecularCloud
-Version: 0.2
+Version: 0.3
 """
 
 import logging
