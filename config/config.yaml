@@ -1,0 +1,17 @@
+rooms:
+    - name: "bathroom"
+      meters:
+          - id: 0
+            name: "cold"
+            offset: 0.0
+          - id: 1
+            name: "hot"
+            offset: 0.0
+    - name: "kitchen"
+      meters:
+          - id: 0
+            name: "cold"
+            offset: 0.0
+          - id: 1
+            name: "hot"
+            offset: 0.0
