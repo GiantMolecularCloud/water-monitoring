@@ -6,21 +6,25 @@ Author: GiantMolecularCloud
 Version: 0.2
 """
 
+import logging
 import os
 from datetime import datetime
-from typing import Dict, Literal, Optional
-from pytz import timezone
-import logging
+from pathlib import Path
+from typing import Dict, List
+
+import influxdb.exceptions as inexc
 import streamlit as st
 from influxdb import InfluxDBClient
-import influxdb.exceptions as inexc
+from pytz import timezone
+
+from config import RoomsConfig, get_config
 
 
 ####################################################################################################
 # SETUP
 ####################################################################################################
 
-ROOMS = ['bathroom', 'kitchen']
+config = get_config(Path("config/config.yaml"))
 
 logging.basicConfig(level=logging.INFO)
 
@@ -56,13 +60,13 @@ client.switch_database(DB_NAME)
 
 def query_last(
     client: InfluxDBClient,
-    room: str,
-    temperature: Literal['hot', 'cold']
+    room_name: str,
+    meter_name: str,
 ) -> float:
 
     try:
         iresponse = client.query(
-            f"SELECT last(\"{temperature}\") FROM \"{room}\""
+            f"SELECT last(\"{meter_name}\") FROM \"{room_name}\""
         ).get_points()
         if not iresponse:
             raise ConnectionError(
@@ -77,7 +81,8 @@ def query_last(
 
 
 def get_latest_readings(
-    client: InfluxDBClient
+    client: InfluxDBClient,
+    rooms: RoomsConfig,
 ) -> Dict[str, Dict[str, float]]:
     """
     Get the latest water meter readings from the database.
@@ -94,7 +99,7 @@ def get_latest_readings(
     """
 
     return {
-        room: {temp: query_last(client, room, temp) for temp in ['hot', 'cold']} for room in ['bathroom', 'kitchen']
+        room.name: {meter.name: query_last(client, room.name, meter.name)-meter.offset for meter in room.meters} for room in rooms
     }
 
 
@@ -108,24 +113,22 @@ class WaterReading:
         self,
         date: datetime.date,
         time: datetime.time,
-        room: Literal['kitchen', 'bathroom'],
-        hot: Optional[float] = None,
-        cold: Optional[float] = None
+        room_name: str,
+        readings: dict,
     ) -> None:
         """
         Format data in an InfluxDB compatible dictionary.
         The various groups of detailed information are separated using tags as field names can occur multiple times.
-        InfluxDB stores time stamps in UTC, so it is up to the user to take care of timezones.
+        InfluxDB stores timestamps in UTC, so it is up to the user to take care of timezones.
         """
         isodate = datetime.combine(date, time)
         isodate = isodate.astimezone(timezone(TIMEZONE))
-        if hot == 0.0:
-            hot = None
-        if cold == 0.0:
-            cold = None
-        self.data = [{'measurement': room,
+        for meter_name, value in readings.items():
+            if value == 0.0:
+                readings[meter_name] = None
+        self.data = [{'measurement': room_name,
                       'time': isodate,
-                      'fields': {"hot": hot, "cold": cold}
+                      'fields': readings
                       }]
 
     def display(self) -> None:
@@ -190,7 +193,7 @@ st.title('Water Monitoring')
 # data entry
 ####################################################################################################
 
-latest_readings = get_latest_readings(client)
+latest_readings = get_latest_readings(client, config.rooms)
 
 st.write('Enter water meter readings:')
 
@@ -206,40 +209,31 @@ with col2:
                          )
 st.text("")
 
-for room in ROOMS:
+for room in config.rooms:
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.header(room)
-    with col2:
-        hot = latest_readings[room]['hot']
-        st.metric(
-            label=f"{room} hot",
-            value=hot,
-            delta=hot-latest_readings[room]['hot']
-        )
-        hot = st.number_input(
-            label='new value:',
-            value=hot,
-            step=0.001,
-            format='%.3f',
-            key=f'{room}_hot'
-        )
-    with col3:
-        cold = latest_readings[room]['cold']
-        st.metric(
-            label=f"{room} cold",
-            value=cold,
-            delta=cold-latest_readings[room]['cold']
-        )
-        cold = st.number_input(
-            label='new value:',
-            value=cold,
-            step=0.001,
-            format='%.3f',
-            key=f'{room}_cold'
-        )
+    cols = st.columns(len(room.meters)+1)
+    with cols[0]:
+        st.header(room.name)
+    
+    readings = {}
+    for col,meter in zip(cols[1:],room.meters):
+        with col:
+            value = latest_readings[room.name][meter.name]
+            st.metric(
+                label=f"{room.name} {meter.name}",
+                value=value,
+                delta=value-latest_readings[room.name][meter.name]
+            )
+            value = st.number_input(
+                label='new value:',
+                value=value,
+                step=0.001,
+                format='%.3f',
+                key=f'{room.name}_{meter.name}'
+            )
+            readings[meter.name] = value + meter.offset
+
     st.text("")
-    if st.button(label='Send', key=f"send_{room}"):
-        data = WaterReading(date, time, room, hot, cold)
+    if st.button(label='Send', key=f"send_{room.name}"):
+        data = WaterReading(date, time, room.name, readings)
         data.write_to_database(client)
