@@ -16,10 +16,10 @@ Run the app in Streamlit:
 ## docker
 
 Build the image:  
-`docker build -t water-monitoring:0.1 -f docker/Dockerfile .`
+`docker build -t water-monitoring:latest -f docker/Dockerfile .`
 
 Run the container:  
-`docker run -p 8501:8501 water-monitoring:0.1 water-monitoring`
+`docker run -p 8501:8501 -v /path/to/your/config/directory:/config water-monitoring:latest water-monitoring`
 
 ## Options
 
@@ -35,6 +35,18 @@ When no variables are given, the following defaults are assumed:
 | DB_NAME       | 'water-monitoring' |
 | TIMEZONE      | 'Europe/Berlin'    |
 | DEBUG         | False              |
+
+## Water meter configuration
+
+The water meters are configured in a yaml config file, see `config/config.yaml` for an example.
+An umlimited number of rooms with each an unlimited number of water meters is supported.
+The structure is as follows:
+
+-   rooms: list of rooms
+-   each room must be given a name and a list of water meters
+-   each water meter has an ID, name and offset. The offset is added to the actual meter readings to get coherent measurements when the meter is replaced.
+
+The app expects the config file to be located in `config/config.yaml`. When run in docker, your config must therefore be passed through with a `volume` argument.
 
 ## Frontend
 
