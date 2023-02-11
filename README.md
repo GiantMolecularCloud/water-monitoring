@@ -1,3 +1,6 @@
+[![Build image and push to Docker Hub](https://github.com/GiantMolecularCloud/water-monitoring/actions/workflows/build-image.yml/badge.svg)](https://github.com/GiantMolecularCloud/water-monitoring/actions/workflows/build-image.yml)
+
+
 # Water Monitoring
 
 A simple streamlit frontend to log water meter readings into InfluxDB.
